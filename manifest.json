@@ -2,7 +2,7 @@
   "name": "MentraFix Lite | نظام إدارة مراكز الصيانة",
   "short_name": "MentraFix",
   "description": "برنامج مجاني لإدارة مراكز صيانة الإلكترونيات، تسجيل العملاء، طباعة الفواتير ومتابعة أوامر الشغل. يعمل محلياً بدون إنترنت.",
-  "start_url": "./index.html",
+  "start_url": "https://mentratech1.github.io/MentraFixLite/index.html",
   "display": "standalone",
   "background_color": "#0F172A",
   "theme_color": "#06B6D4",
@@ -28,7 +28,7 @@
       "name": "فتح النظام",
       "short_name": "دخول",
       "description": "الدخول إلى لوحة تحكم مركز الصيانة",
-      "url": "/subscriptions.html",
+      "url": "https://mentratech1.github.io/MentraFixLite/subscriptions.html",
       "icons": [{ "src": "assets/icon-192x192.png", "sizes": "192x192" }]
     }
   ]
