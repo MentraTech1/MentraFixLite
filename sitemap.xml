@@ -1,28 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   
-  <!-- الصفحة الرئيسية (أهم صفحة) -->
+  <!-- 1. الصفحة الرئيسية (الرابط الكانونيكال الأساسي) -->
   <url>
     <loc>https://mentratech1.github.io/MentraFixLite/</loc>
-    <lastmod>2024-05-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-11-04</lastmod>
+    <image:image>
+      <image:loc>https://mentratech1.github.io/MentraFixLite/assets/logo.png</image:loc>
+      <image:title>شعار برنامج MentraFix Lite لإدارة مراكز الصيانة</image:title>
+      <image:caption>برنامج مجاني لإدارة ورش ومراكز الصيانة بدون إنترنت</image:caption>
+    </image:image>
   </url>
 
-  <!-- صفحة دليل التشغيل (مهمة للكلمات المفتاحية) -->
+  <!-- 2. صفحة دليل الاستخدام المصور (غنية بالكلمات المفتاحية وصور الشاشات) -->
   <url>
     <loc>https://mentratech1.github.io/MentraFixLite/Tutorial.html</loc>
-    <lastmod>2024-05-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-11-04</lastmod>
+    <image:image>
+      <image:loc>https://mentratech1.github.io/MentraFixLite/assets/start.PNG</image:loc>
+      <image:title>شاشة تسجيل الدخول وتأسيس مركز الصيانة</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://mentratech1.github.io/MentraFixLite/assets/step1.PNG</image:loc>
+      <image:title>لوحة التحكم الرئيسية وإحصائيات مركز الصيانة</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://mentratech1.github.io/MentraFixLite/assets/step2.PNG</image:loc>
+      <image:title>شاشة إدارة العملاء وتسجيل الأجهزة</image:title>
+    </image:image>
+    <image:image>
+      <image:loc>https://mentratech1.github.io/MentraFixLite/assets/step4.PNG</image:loc>
+      <image:title>ورشة الصيانة ومتابعة أوامر الشغل والتيكت</image:title>
+    </image:image>
   </url>
 
-  <!-- صفحة تسجيل الدخول / إنشاء المكتب -->
+  <!-- 3. بوابة الدخول والتأسيس السريع -->
   <url>
     <loc>https://mentratech1.github.io/MentraFixLite/subscriptions.html</loc>
-    <lastmod>2024-05-20</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <lastmod>2026-11-04</lastmod>
   </url>
 
 </urlset>

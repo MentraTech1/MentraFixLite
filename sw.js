@@ -1,75 +1,192 @@
-// ==========================================
-// MentraClinics Lite - Service Worker (Offline First)
-// ==========================================
+/* ===================================================================
+   MentraFix Lite - Full Offline Service Worker (100% Offline-First)
+   شامل جميع المكونات الفرعية (components/) لضمان عمل الشاشات بالكامل أوفلاين
+   =================================================================== */
 
-const CACHE_NAME = 'Mentra-FixLite-v5.0';
+const CACHE_NAME = 'mentrafix-lite-v3.0.0';
 
-// الملفات الأساسية التي يجب تحميلها فور تشغيل البرنامج لأول مرة
-const CORE_ASSETS = [
+// القائمة الشاملة والنهائية لجميع ملفات النظام (أكثر من 70 ملف ومكون)
+const STATIC_ASSETS = [
+    // -------------------------------------------------------------
+    // 1. الصفحات الأساسية وملفات الإعدادات
+    // -------------------------------------------------------------
     './',
     './index.html',
     './subscriptions.html',
     './dashboard.html',
     './Tutorial.html',
-    './database.js',
     './manifest.json',
+    './robots.txt',
+    './database.js',
+
+    // -------------------------------------------------------------
+    // 2. مكتبات الجافاسكربت المحلية وملفات التصميم
+    // -------------------------------------------------------------
+    './assets/Tailwind.js',
+    './assets/react.production.min.js',
+    './assets/react-dom.production.min.js',
+    './assets/babel.min.js',
+    './assets/dexie.min.js',
+    './assets/chart.js', // مكتبة الرسم البياني للوحة الرئيسية والمالية
+
+    // -------------------------------------------------------------
+    // 3. الصور ودليل الاستخدام
+    // -------------------------------------------------------------
     './assets/logo.png',
-	'./assets/step1.PNG',
-	'./assets/step2.PNG',
-	'./assets/step3.PNG',
-	'./assets/step4.PNG',
-	'./assets/step5.PNG',
-	'./assets/step6.PNG',
-	'./assets/step7.PNG',
-	'./assets/start.PNG',
+    './assets/start.PNG',
+    './assets/step1.PNG',
+    './assets/step2.PNG',
+    './assets/step3.PNG',
+    './assets/step4.PNG',
+    './assets/step5.PNG',
+    './assets/step6.PNG',
+    './assets/step7.PNG',
 
-
-    
-    // شاشات النظام المبرمجة ديناميكياً (يجب أن تكون في مجلد pages)
+    // -------------------------------------------------------------
+    // 4. حاويات الشاشات الرئيسية (Pages Modules)
+    // -------------------------------------------------------------
     './pages/main.js',
     './pages/customers.js',
     './pages/purchases_and_stock.js',
     './pages/requests.js',
+    './pages/pos.js',
     './pages/inventory.js',
     './pages/finances.js',
     './pages/settings.js',
-    './pages/backup.js'
+    './pages/backup.js',
+
+    // -------------------------------------------------------------
+    // 5. المكونات الفرعية المحقونة (Components Modules)
+    // -------------------------------------------------------------
+    
+    // أ) الشاشة الرئيسية (Main)
+    './components/Main/WelcomeHeader.js',
+    './components/Main/QuickStats.js',
+    './components/Main/InventoryStats.js',
+    './components/Main/RecentOrdersTable.js',
+    './components/Main/ProBanner.js',
+    './components/Main/Module_Main_Container.js',
+
+    // ب) العملاء والأجهزة (Customers)
+    './components/Customers/CustomersHeader.js',
+    './components/Customers/CustomersStats.js',
+    './components/Customers/CustomersTable.js',
+    './components/Customers/CustomersProBanner.js',
+    './components/Customers/CustomerAddEditModal.js',
+    './components/Customers/CustomerDevicesView.js',
+    './components/Customers/DeviceEditModal.js',
+    './components/Customers/DeviceVisitsView.js',
+    './components/Customers/RequestsPartsModal.js',
+    './components/Customers/Module_Customers_Container.js',
+
+    // ج) ورشة الصيانة وأوامر الشغل (Requests)
+    './components/Requests/RequestsHeader.js',
+    './components/Requests/RequestsStatusFilters.js',
+    './components/Requests/RequestsTable.js',
+    './components/Requests/RequestsProBanner.js',
+    './components/Requests/RequestsPartsModal.js',
+    './components/Requests/RequestsAddEditModal.js',
+    './components/Requests/Module_Requests_Container.js',
+
+    // د) المشتريات والمخزن (Purchases)
+    './components/Purchases/PurchasesHeader.js',
+    './components/Purchases/PurchasesStats.js',
+    './components/Purchases/PurchasesTable.js',
+    './components/Purchases/PurchasesProBanner.js',
+    './components/Purchases/PurchaseModal.js',
+    './components/Purchases/Module_Purchases_Container.js',
+
+    // هـ) المبيعات المباشرة (POS)
+    './components/Pos/DirectSale.js',
+    './components/Pos/InvoiceHistory.js',
+    './components/Pos/Module_POS_Container.js',
+
+    // و) جرد المخزن والخدمات (Inventory)
+    './components/Inventory/InventoryHeader.js',
+    './components/Inventory/InventoryStats.js',
+    './components/Inventory/InventoryTable.js',
+    './components/Inventory/InventoryProBanner.js',
+    './components/Inventory/InventoryModal.js',
+    './components/Inventory/InventoryAdjustModal.js',
+    './components/Inventory/Module_Inventory_Container.js',
+
+    // ز) المالية والفواتير (Finances)
+    './components/Finances/FinancesHeader.js',
+    './components/Finances/FinancesStats.js',
+    './components/Finances/FinancesChart.js',
+    './components/Finances/FinancesTabs.js',
+    './components/Finances/FinancesTable.js',
+    './components/Finances/FinancesProBanner.js',
+    './components/Finances/FinancesExpenseModal.js',
+    './components/Finances/FinancesPayModal.js',
+    './components/Finances/FinancesEditInvoiceModal.js',
+    './components/Finances/Finances_InvoicesTab.js',
+    './components/Finances/Finances_PosTab.js',
+    './components/Finances/Finances_ExpensesTab.js',
+    './components/Finances/Finances_PurchasesTab.js',
+    './components/Finances/Module_Finances_Container.js',
+
+    // ح) إعدادات المركز (Settings)
+    './components/Settings/SettingsHeader.js',
+    './components/Settings/SettingsStaffTab.js',
+    './components/Settings/SettingsCenterTab.js',
+    './components/Settings/SettingsSecurityTab.js',
+    './components/Settings/SettingsImportTab.js',
+    './components/Settings/SettingsProBanner.js',
+    './components/Settings/SettingsStaffModal.js',
+    './components/Settings/Module_Settings_Container.js',
+
+    // ط) النسخ الاحتياطي (Backup)
+    './components/Backup/BackupHeader.js',
+    './components/Backup/BackupActions.js',
+    './components/Backup/BackupDangerZone.js',
+    './components/Backup/BackupProBanner.js',
+    './components/Backup/BackupOverlayLoader.js',
+    './components/Backup/Module_Backup_Container.js'
 ];
 
-// الروابط الخارجية (CDNs) مثل React و Tailwind و FontAwesome   subscriptions
-const CDN_URLS = [
-    'https://cdn.tailwindcss.com',
-    'https://cdnjs.cloudflare.com',
-    'https://unpkg.com',
-    'https://fonts.googleapis.com',
-    'https://fonts.gstatic.com'
-];
-
-// 1. حدث التثبيت (Install Event) - حفظ الملفات الأساسية
+// ===================================================================
+// حدث التثبيت (Install Event)
+// ===================================================================
 self.addEventListener('install', (event) => {
-    self.skipWaiting(); // تفعيل النسخة الجديدة فوراً
+    self.skipWaiting();
+
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log('📦 [Service Worker] Caching Core Assets...');
-            // نستخدم catch لتجنب توقف التثبيت إذا كان هناك ملف مفقود
-            return Promise.allSettled(
-                CORE_ASSETS.map(url => 
-                    cache.add(url).catch(err => console.warn(`⚠️ لم يتم العثور على: ${url}`))
-                )
-            );
+        caches.open(CACHE_NAME).then(async (cache) => {
+            console.log('📦 [MentraFix SW] بدء تخزين النظام والمكونات بالكامل...');
+
+            // استخدام Promise.allSettled لضمان عدم توقف الكاش عند غياب أي ملف ثانوي
+            const cachePromises = STATIC_ASSETS.map(async (url) => {
+                try {
+                    const request = new Request(url, { cache: 'reload' });
+                    const response = await fetch(request);
+                    if (response.ok) {
+                        return await cache.put(url, response);
+                    } else {
+                        console.warn(`⚠️ [MentraFix SW] تخطي الملف (${response.status}): ${url}`);
+                    }
+                } catch (err) {
+                    console.warn(`⚠️ [MentraFix SW] لم يتم العثور على: ${url}`);
+                }
+            });
+
+            await Promise.allSettled(cachePromises);
+            console.log('✅ [MentraFix SW] تم تخزين جميع المكونات بنجاح. النظام جاهز للعمل أوفلاين 100%.');
         })
     );
 });
 
-// 2. حدث التفعيل (Activate Event) - مسح الكاش القديم إن وُجد
+// ===================================================================
+// حدث التنشيط وحذف الكاش القديم (Activate Event)
+// ===================================================================
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
+        caches.keys().then((keys) => {
             return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('🗑️ [Service Worker] Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
+                keys.map((key) => {
+                    if (key !== CACHE_NAME) {
+                        console.log(`🗑️ [MentraFix SW] حذف كاش قديم: ${key}`);
+                        return caches.delete(key);
                     }
                 })
             );
@@ -77,43 +194,46 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// 3. حدث جلب البيانات (Fetch Event) - المنطق الذكي للعمل Offline
+// ===================================================================
+// حدث اعتراض الطلبات (Fetch Event)
+// ===================================================================
 self.addEventListener('fetch', (event) => {
-    const requestUrl = event.request.url;
+    const request = event.request;
+    const url = request.url;
 
-    // أ) إذا كان الطلب من مكتبة خارجية (CDN)
-    if (CDN_URLS.some(cdn => requestUrl.includes(cdn))) {
-        event.respondWith(
-            caches.match(event.request).then((cachedResponse) => {
-                if (cachedResponse) return cachedResponse; // إرجاعها من الكاش إذا وجدت
-                
-                return fetch(event.request).then((networkResponse) => {
-                    return caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, networkResponse.clone());
-                        return networkResponse;
-                    });
-                }).catch(() => {
-                    console.warn('❌ [Service Worker] Network failed for CDN:', requestUrl);
-                });
-            })
-        );
-        return;
-    }
+    if (request.method !== 'GET' || !url.startsWith('http')) return;
 
-    // ب) إذا كان الطلب لملفات النظام المحلية (HTML, JS, CSS, PNG)
     event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            // استراتيجية: Stale-While-Revalidate (عرض الكاش مع تحديثه في الخلفية إذا وجد إنترنت)
-            const fetchPromise = fetch(event.request).then((networkResponse) => {
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, networkResponse.clone());
-                });
-                return networkResponse;
-            }).catch(() => {
-                // إذا لم يوجد إنترنت، لا تفعل شيئاً (الكاش سيعمل)
-            });
+        // ignoreSearch: true هو السر لمعالجة fetch(`${file}?v=${Date.now()}`)
+        caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
 
-            return cachedResponse || fetchPromise;
+            // استراتيجية Cache-First: إرجاع المكون فوراً من الذاكرة لسرعة خيالية في أجزاء من الثانية
+            if (cachedResponse) {
+                // محاولة تحديث الكاش بهدوء في الخلفية إن توفر اتصال بالإنترنت
+                fetch(request).then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        caches.open(CACHE_NAME).then((cache) => {
+                            cache.put(request, networkResponse.clone());
+                        });
+                    }
+                }).catch(() => { /* وضع عدم الاتصال */ });
+
+                return cachedResponse;
+            }
+
+            // إذا لم يكن بالذاكرة (مثل خطوط Google أو أيقونات CDN لأول مرة)
+            return fetch(request).then((networkResponse) => {
+                if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
+                    const responseClone = networkResponse.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(request, responseClone);
+                    });
+                }
+                return networkResponse;
+            }).catch((error) => {
+                console.error(`❌ [MentraFix SW] فشل جلب المورد أثناء وضع أوفلاين: ${url}`);
+                throw error;
+            });
         })
     );
 });
