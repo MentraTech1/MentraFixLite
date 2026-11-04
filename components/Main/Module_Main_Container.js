@@ -12,8 +12,8 @@ window.Module_Main_Container = function(props) {
         expenses: 0, 
         totalPurchases: 0, 
         cashInDrawer: 0,        // السيولة في الدرج
-        estimatedNetProfit: 0,  // الأرباح التشغيلية الحقيقية
-        inventoryValue: 0,      // قيمة البضاعة المتبقية في المخزن
+        estimatedNetProfit: 0,  // الأرباح التشغيلية
+        inventoryValue: 0,      // قيمة البضاعة في المخزن
         active_jobs: 0, 
         total_customers: 0 
     });
@@ -21,8 +21,19 @@ window.Module_Main_Container = function(props) {
     const [recentOrders, setRecentOrders] = useState([]);
     const [pagination, setPagination] = useState({ current_page: 1, last_page: 1 });
     
-    const today = new Date().toISOString().split('T')[0];
-    const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+    // دالة استخراج التاريخ النصي الموحد YYYY-MM-DD تماماً مثل صفحة الحسابات
+    const safeDate = (d) => {
+        if (!d) return '';
+        try {
+            return String(d).split('T')[0].split(' ')[0];
+        } catch(e) {
+            return '';
+        }
+    };
+
+    const today = safeDate(new Date().toISOString());
+    // بداية الشهر الحالي كافتراضي
+    const firstDay = safeDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString());
     const [dateFilter, setDateFilter] = useState({ from: firstDay, to: today });
     
     const [invStats, setInvStats] = useState({ 
@@ -36,47 +47,66 @@ window.Module_Main_Container = function(props) {
     const fetchDashboardData = async (page = 1) => {
         setIsLoading(true);
         try {
-            const fromTime = new Date(dateFilter.from).getTime();
-            const toTime = new Date(dateFilter.to).setHours(23, 59, 59, 999);
+            const { from, to } = dateFilter;
+
+            // دالة التحقق من مطابقة النطاق الزمني
+            const isDateInRange = (rawDate) => {
+                const itemDate = safeDate(rawDate);
+                if (!itemDate) return true; // إذا لم يوجد تاريخ يُحسب لعدم التضييع
+                if (from && itemDate < from) return false;
+                if (to && itemDate > to) return false;
+                return true;
+            };
 
             const total_customers = await window.db.customers.count();
 
-            // 1. إيرادات الصيانة المحصلة كاش خلال الفترة
-            const allPayments = await window.db.payments.toArray();
-            const revenue = allPayments.filter(p => {
-                const pTime = new Date(p.payment_date || p.created_at).getTime();
-                return pTime >= fromTime && pTime <= toTime;
-            }).reduce((sum, p) => sum + Number(p.amount || 0), 0);
+            // 1. إيرادات فواتير الصيانة (تماماً كما تُحسب في Finances_InvoicesTab)
+            let maintenanceRevenue = 0;
+            if (window.db.invoices) {
+                const allInvoices = await window.db.invoices.toArray();
+                maintenanceRevenue = allInvoices.filter(inv => {
+                    const invDate = inv.created_at || inv.date;
+                    const inRange = isDateInRange(invDate);
+                    const isPaid = inv.status === 'مدفوعة';
+                    return inRange && isPaid;
+                }).reduce((sum, inv) => {
+                    const amount = Number(inv.final_amount !== undefined ? inv.final_amount : inv.total_amount) || 0;
+                    return sum + amount;
+                }, 0);
+            }
 
-            // 2. إيرادات المبيعات المباشرة (الكاشير POS خلال الفترة)
+            // 2. إيرادات المبيعات المباشرة (تماماً كما تُحسب في Finances_PosTab)
             let posSalesRevenue = 0;
             if (window.db.pos_invoices) {
                 const allPosInvoices = await window.db.pos_invoices.toArray();
-                posSalesRevenue = allPosInvoices.filter(inv => {
-                    const invTime = new Date(inv.date || inv.created_at).getTime();
-                    return invTime >= fromTime && invTime <= toTime;
-                }).reduce((sum, inv) => sum + Number(inv.netAmount || inv.total_amount || 0), 0);
+                posSalesRevenue = allPosInvoices.filter(sale => {
+                    const saleDate = sale.date || sale.created_at;
+                    return isDateInRange(saleDate);
+                }).reduce((sum, sale) => {
+                    const amount = Number(sale.netAmount !== undefined ? sale.netAmount : sale.total_amount) || 0;
+                    return sum + amount;
+                }, 0);
             }
 
-            // 3. المصروفات التشغيلية العامة (استبعاد مشتريات البضاعة لمنع الازدواجية)
-            const allExpenses = await window.db.expenses.toArray();
-            const expensesAmount = allExpenses.filter(e => {
-                const eTime = new Date(e.date || e.created_at).getTime(); 
-                const inRange = eTime >= fromTime && eTime <= toTime;
-                const isOperationalExpense = e.expense_type !== 'مشتريات بضاعة';
-                return inRange && isOperationalExpense;
-            }).reduce((sum, e) => sum + Number(e.amount || 0), 0);
+            // 3. المصروفات التشغيلية (من جدول expenses)
+            let expensesAmount = 0;
+            if (window.db.expenses) {
+                const allExpenses = await window.db.expenses.toArray();
+                expensesAmount = allExpenses.filter(e => {
+                    const eDate = e.date || e.created_at;
+                    const inRange = isDateInRange(eDate);
+                    const isOperational = e.expense_type !== 'مشتريات بضاعة';
+                    return inRange && isOperational;
+                }).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+            }
 
             // 4. أوامر الشغل النشطة
             const allRequests = await window.db.maintenance_requests.toArray();
-            const filteredRequests = allRequests.filter(r => {
-                const rTime = new Date(r.created_at).getTime();
-                return rTime >= fromTime && rTime <= toTime;
-            });
+            const filteredRequests = allRequests.filter(r => isDateInRange(r.created_at || r.receipt_date));
             const closedStatuses = ['مكتمل', 'تم التسليم', 'ملغاة', 'مرفوض / لا يمكن إصلاحه'];
             const active_jobs = filteredRequests.filter(r => !closedStatuses.includes(r.status ? r.status.trim() : '')).length;
 
-            // 5. تفنيد حركة المخزن والمشتريات باحترافية
+            // 5. تقرير المخزن، المشتريات، وحركة القطع
             let totalPurchases = 0;
             let partsProfit = 0;
             let itemsIn = 0;
@@ -84,10 +114,7 @@ window.Module_Main_Container = function(props) {
             let itemsOutSales = 0;
 
             const allMovements = await window.db.stock_movements.toArray();
-            const filteredMovements = allMovements.filter(m => {
-                const mTime = new Date(m.created_at).getTime();
-                return mTime >= fromTime && mTime <= toTime;
-            });
+            const filteredMovements = allMovements.filter(m => isDateInRange(m.created_at));
 
             const allParts = await window.db.inventory_parts.toArray();
             const partsMap = {};
@@ -130,7 +157,7 @@ window.Module_Main_Container = function(props) {
                     else {
                         itemsIn += qty;
 
-                        // التصحيح المحاسبي: احتساب المشتريات النقدية الفعلية فقط التي خرجت من الدرج
+                        // مشتريات نقدية فعلية فقط (دون الرصيد الافتتاحي أو التسوية الجردية)
                         const isActualPurchase = (moveType.includes('شراء') || moveType.includes('وارد') || moveType.includes('توريد')) 
                                               && !moveType.includes('افتتاحي') 
                                               && !moveType.includes('تسوية');
@@ -150,14 +177,14 @@ window.Module_Main_Container = function(props) {
             const totalPartsInStock = allParts.reduce((sum, item) => sum + Number(item.stock_quantity || 0), 0);
 
             // 6. المعادلات المالية الدقيقة:
-            // أ) السيولة الفعلية المتبقية في الدرج (الكاش الفعلي في الصندوق):
-            const cashInDrawer = (revenue + posSalesRevenue) - expensesAmount - totalPurchases;
+            // أ) السيولة الفعلية المتبقية في الدرج (كاش الصيانة + كاش المبيعات - المصروفات - المشتريات):
+            const cashInDrawer = (maintenanceRevenue + posSalesRevenue) - expensesAmount - totalPurchases;
 
-            // ب) صافي الربح الحقيقي للنشاط (إيرادات الصيانة + أرباح بيع القطع - المصروفات):
-            const estimatedNetProfit = (revenue + partsProfit) - expensesAmount;
+            // ب) صافي الربح الحقيقي:
+            const estimatedNetProfit = (maintenanceRevenue + partsProfit) - expensesAmount;
 
             setStats({ 
-                revenue, 
+                revenue: maintenanceRevenue, 
                 posSalesRevenue,
                 expenses: expensesAmount, 
                 totalPurchases, 
@@ -189,12 +216,16 @@ window.Module_Main_Container = function(props) {
                 if (req.customer_id) {
                     const cust = await window.db.customers.get(Number(req.customer_id));
                     req.customer_name = cust ? cust.name : 'عميل غير مسجل';
-                } else { req.customer_name = 'عميل غير مسجل'; }
+                } else { 
+                    req.customer_name = 'عميل غير مسجل'; 
+                }
 
                 if (req.device_id) {
                     const dev = await window.db.devices.get(Number(req.device_id));
                     req.device_type = dev ? dev.device_type : 'غير محدد';
-                } else { req.device_type = 'غير محدد'; }
+                } else { 
+                    req.device_type = 'غير محدد'; 
+                }
             }
 
             setRecentOrders(paginatedRequests);
@@ -208,8 +239,13 @@ window.Module_Main_Container = function(props) {
         }
     };
 
-    useEffect(() => { fetchDashboardData(pagination.current_page); }, [dateFilter]);
-    const handleDateChange = (e) => { setDateFilter({ ...dateFilter, [e.target.name]: e.target.value }); };
+    useEffect(() => { 
+        fetchDashboardData(pagination.current_page); 
+    }, [dateFilter]);
+
+    const handleDateChange = (e) => { 
+        setDateFilter({ ...dateFilter, [e.target.name]: e.target.value }); 
+    };
 
     if (isLoading && recentOrders.length === 0 && stats.revenue === 0) {
         return (
